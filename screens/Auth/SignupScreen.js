@@ -4,6 +4,9 @@ import { KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } fr
 import api from '../../services/api'; 
 import { storeAuthToken } from '../../services/authStorage';
 
+
+
+
 export default function SignupScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,7 +21,7 @@ export default function SignupScreen({ navigation }) {
     }
   
     try {
-      const response = await api.post('/auth/register', {
+      const response = await api.post('/api/auth/register', {
         email,
         password,
         name,
@@ -178,3 +181,4 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
+
