@@ -4,11 +4,11 @@
     "slug": "Viva-App-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/v-logo-3.png",
+    "icon": "./assets/v-logo-1.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/v-logo-3.png",
+      "image": "./assets/v-logo-1.png",
       "resizeMode": "cover",
       "backgroundColor": "#000000"
     },
@@ -17,17 +17,17 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/v-logo-3.png",
+        "foregroundImage": "./assets/v-logo-1.png",
         "backgroundColor": "#000000"
       },
       "splash": {
-        "image": "./assets/v-logo-3.png",
+        "image": "./assets/v-logo-1.png",
         "resizeMode": "cover",
         "backgroundColor": "#000000"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/v-logo-1.png"
     },
     "plugins": [
       "expo-font"
