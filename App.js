@@ -15,7 +15,7 @@ export default function App() {
     Font.loadAsync({
       'Lato': require('./assets/fonts/Lato.ttf'),
       'Alike': require('./assets/fonts/Alike.ttf'),
-      'Playfair': require('./assets/fonts/PlayfairDisplaySC.ttf'),
+      'Playfair': require('./assets/fonts/Playfair.ttf'),
     }).then(() => setFontsLoaded(true));
   }, []);
 
