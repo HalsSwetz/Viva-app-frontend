@@ -13,6 +13,7 @@ export default function SignupScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [zipcode, setZipcode] = useState('');
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -25,6 +26,7 @@ export default function SignupScreen({ navigation }) {
         email,
         password,
         name,
+        zipcode,
       });
   
       if (response.status === 201) {
@@ -32,7 +34,7 @@ export default function SignupScreen({ navigation }) {
   
         if (token) {
           await storeAuthToken(token); 
-          navigation.navigate('HomeFeed'); 
+          navigation.navigate('AppEducation'); 
         } else {
           navigation.navigate('Login');
         }
@@ -102,6 +104,17 @@ export default function SignupScreen({ navigation }) {
             }}
             placeholderTextColor="#ccc"
           />
+            <TextInput
+            placeholder="Zip Code"
+            style={styles.input}
+            keyboardType="numeric"
+            value={zipcode}
+            onChangeText={(text) => {
+                setZipcode(text);
+                if (error) setError('');
+            }}
+            placeholderTextColor="#ccc"
+            />
   
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
   

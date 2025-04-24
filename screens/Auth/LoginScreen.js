@@ -27,7 +27,7 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
 
       if (response.status === 200) {
         const { token } = response.data;

@@ -30,7 +30,8 @@
       "favicon": "./assets/v-logo-1.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ]
   }
 }
