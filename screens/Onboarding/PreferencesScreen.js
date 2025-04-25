@@ -13,6 +13,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Image,
+  SectionList
 } from 'react-native';
 import { getAuthToken } from '../../services/authStorage';
 
@@ -35,16 +36,15 @@ export default function PreferencesScreen({ navigation }) {
   const debouncedSearch = useCallback(
     debounce(async (value) => {
       if (value.length < 2) return setSuggestions([]);
-
+  
       try {
-        const res = await fetch(`${backendUrl}/api/events?query=${encodeURIComponent(value)}`);
+        const types = ['artist', 'venue', 'genre', 'city'];
+        const res = await fetch(
+          `${backendUrl}/api/events?query=${encodeURIComponent(value)}&types=${types.join(',')}`
+        );
         const data = await res.json();
-        const results = data.map((item) => ({
-          id: item.id,
-          name: item.name,
-          type: 'event',
-        }));
-        setSuggestions(results);
+  
+        setSuggestions(data);
       } catch (error) {
         console.error('Search error:', error);
       }
@@ -59,19 +59,19 @@ export default function PreferencesScreen({ navigation }) {
 
   const handleSelectSuggestion = (item) => {
     const exists = preferences.some(
-      (pref) => pref.value === item.name && pref.type === 'event'
+      (pref) => pref.value === item.name && pref.type === item.type
     );
     if (exists) {
       Alert.alert('Already Added', `"${item.name}" is already in your preferences`);
       return;
     }
-
+  
     const newPref = {
-      type: 'event',
+      type: item.type,
       value: item.name,
       tmId: item.id,
     };
-
+  
     setPreferences([...preferences, newPref]);
     setSuggestions([]);
     setSearchQuery('');
@@ -106,9 +106,19 @@ export default function PreferencesScreen({ navigation }) {
 
   const renderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleSelectSuggestion(item)} style={styles.suggestion}>
-      <Text style={styles.suggestionText}>{item.name}</Text>
+      <Text style={styles.suggestionText}>
+        {item.name} – {capitalize(item.type)}
+      </Text>
     </TouchableOpacity>
   );
+  
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
+  const groupedSuggestions = suggestions.reduce((acc, item) => {
+    if (!acc[item.type]) acc[item.type] = [];
+    acc[item.type].push(item);
+    return acc;
+  }, {});
 
   return (
     <KeyboardAvoidingView
@@ -117,10 +127,16 @@ export default function PreferencesScreen({ navigation }) {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          <FlatList
-            data={suggestions}
-            keyExtractor={(item) => item.id}
+          <SectionList
+            sections={Object.keys(groupedSuggestions).map((type) => ({
+              title: capitalize(type),
+              data: groupedSuggestions[type],
+            }))}
+            keyExtractor={(item) => `${item.type}-${item.id}`}
             renderItem={renderItem}
+            renderSectionHeader={({ section: { title } }) => (
+              <Text style={styles.sectionHeader}>{title}s</Text>
+            )}
             ListHeaderComponent={
               <View>
                 <Image
@@ -146,16 +162,16 @@ export default function PreferencesScreen({ navigation }) {
             contentContainerStyle={styles.listContent}
             keyboardShouldPersistTaps="handled"
           />
-
+  
           <View style={styles.bottomSection}>
             <TouchableOpacity style={styles.button} onPress={handleSubmitPreferences}>
               <Text style={styles.buttonText}>Save Preferences</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('PersonalBillingInfo')}>
+  
+            <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('UserDetail')}>
               <Text style={styles.skipText}>Skip for now</Text>
             </TouchableOpacity>
-
+  
             <View style={styles.stepperContainer}>
               {[1, 2, 3, 4, 5].map((step) => (
                 <View
@@ -203,6 +219,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     fontSize: 14,
+  },
+  sectionHeader: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
   },
   input: {
     height: 48,
