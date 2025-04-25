@@ -13,7 +13,6 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Image,
-  SectionList
 } from 'react-native';
 import { getAuthToken } from '../../services/authStorage';
 
@@ -33,6 +32,24 @@ export default function PreferencesScreen({ navigation }) {
     fetchToken();
   }, []);
 
+  const scoreItem = (item, query) => {
+    const name = item.name.toLowerCase();
+    const q = query.toLowerCase();
+  
+    let score = 0;
+    if (name === q) score += 100;
+    if (name.startsWith(q)) score += 40;
+    if (name.includes(q)) score += 20;
+    if (item.segment === 'sports' && item.type === 'artist') score += 25;
+    if (item.segment === 'music') score += 15;
+    if (item.segment === 'sports') score += 10;
+    if (item.type === 'artist') score += 10;
+    if (item.type === 'venue') score += 5;
+    if (name.includes(' vs ')) score -= 20;
+  
+    return score;
+  };
+  
   const debouncedSearch = useCallback(
     debounce(async (value) => {
       if (value.length < 2) return setSuggestions([]);
@@ -42,9 +59,27 @@ export default function PreferencesScreen({ navigation }) {
         const res = await fetch(
           `${backendUrl}/api/events?query=${encodeURIComponent(value)}&types=${types.join(',')}`
         );
-        const data = await res.json();
+        const rawData = await res.json();
+        // console.log('Raw Data:', rawData);
   
-        setSuggestions(data);
+        const unique = [];
+        const seen = new Set();
+        for (let item of rawData) {
+          const key = `${item.name}|${item.type}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(item);
+          }
+        }
+  
+        const scored = unique
+          .filter((item) => item.name && item.name.length > 2)
+          .map(item => ({ ...item, _score: scoreItem(item, value) }))
+          .sort((a, b) => b._score - a._score);
+  
+        const cleaned = scored.filter(item => item.type !== 'genre'); // Exclude genres
+  
+        setSuggestions(cleaned);
       } catch (error) {
         console.error('Search error:', error);
       }
@@ -104,21 +139,32 @@ export default function PreferencesScreen({ navigation }) {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleSelectSuggestion(item)} style={styles.suggestion}>
-      <Text style={styles.suggestionText}>
-        {item.name} – {capitalize(item.type)}
-      </Text>
-    </TouchableOpacity>
-  );
+  const formatItemLabel = (item) => {
+    const base = item.name;
+    const type = item.type;
+    const segment = item.segment;
   
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+    if (type === 'city') {
+      return `${base} [City]`; 
+    }
+    if (segment === 'sports' && type === 'artist') return `${base} [Sports Team]`;
+    if (type === 'venue' && item.city) return `${base} [Venue – ${item.city}]`; 
+    if (type === 'genre') return null; 
+    return `${base} [${capitalize(type)}]`;
+  };
 
-  const groupedSuggestions = suggestions.reduce((acc, item) => {
-    if (!acc[item.type]) acc[item.type] = [];
-    acc[item.type].push(item);
-    return acc;
-  }, {});
+  const renderItem = ({ item }) => {
+    if (!item.name) return null;
+    const label = formatItemLabel(item);
+    if (!label) return null; 
+    return (
+      <TouchableOpacity onPress={() => handleSelectSuggestion(item)} style={styles.suggestion}>
+        <Text style={styles.suggestionText}>{label}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
   return (
     <KeyboardAvoidingView
@@ -127,16 +173,10 @@ export default function PreferencesScreen({ navigation }) {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          <SectionList
-            sections={Object.keys(groupedSuggestions).map((type) => ({
-              title: capitalize(type),
-              data: groupedSuggestions[type],
-            }))}
+          <FlatList
+            data={suggestions}
             keyExtractor={(item) => `${item.type}-${item.id}`}
             renderItem={renderItem}
-            renderSectionHeader={({ section: { title } }) => (
-              <Text style={styles.sectionHeader}>{title}s</Text>
-            )}
             ListHeaderComponent={
               <View>
                 <Image
@@ -155,7 +195,9 @@ export default function PreferencesScreen({ navigation }) {
                   value={searchQuery}
                   onChangeText={handleInputChange}
                   returnKeyType="done"
-                  onFocus={() => setSearchQuery('')}
+                  onFocus={() => {
+                    setSuggestions([]); 
+                  }}
                 />
               </View>
             }
