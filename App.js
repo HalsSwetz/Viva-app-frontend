@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import * as Font from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Toast from 'react-native-toast-message'; 
 
 import LoginScreen from './screens/Auth/LoginScreen';
 import SignupScreen from './screens/Auth/SignupScreen';
 import AppEducationScreen from './screens/Onboarding/AppEducationScreen';
-
 import HomeFeedScreen from './screens/Feed/HomeFeedScreen';
 import UserDetailScreen from './screens/Onboarding/UserDetailScreen';
 import PaymentInfoScreen from './screens/Onboarding/PaymentInfoScreen';
@@ -28,16 +28,20 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="AppEducation" component={AppEducationScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="UserDetail" component={UserDetailScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="PaymentInfo" component={PaymentInfoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="HomeFeed" component={HomeFeedScreen} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="AppEducation" component={AppEducationScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="UserDetail" component={UserDetailScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="PaymentInfo" component={PaymentInfoScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="HomeFeed" component={HomeFeedScreen} options={{ headerShown: false }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+
+      <Toast />
+    </>
   );
 }

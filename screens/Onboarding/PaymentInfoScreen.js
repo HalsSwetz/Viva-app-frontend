@@ -55,7 +55,7 @@ export default function PaymentInfoScreen({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => navigation.navigate('Preferences')}
+        onPress={() => navigation.navigate('HomeFeed')}
         style={styles.skipContainer}
       >
         <Text style={styles.skipText}>Skip for now</Text>

@@ -97,7 +97,7 @@ export default function PreferencesScreen({ navigation }) {
       (pref) => pref.value === item.name && pref.type === item.type
     );
     if (exists) {
-      Alert.alert('Already Added', `"${item.name}" is already in your preferences`);
+      Alert.alert('Already Added', `${item.name} is already in your preferences`);
       return;
     }
   
@@ -132,7 +132,7 @@ export default function PreferencesScreen({ navigation }) {
       if (!res.ok) throw new Error('Failed to update preferences');
 
       Alert.alert('Success', 'Preferences saved!');
-      navigation.navigate('PersonalBillingInfo');
+      navigation.navigate('UserDetail');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Could not save preferences');
@@ -186,7 +186,7 @@ export default function PreferencesScreen({ navigation }) {
                 />
                 <Text style={styles.title}>Add Some Favorites to Customize Your Experience</Text>
                 <Text style={styles.helperText}>
-                  Try searching for: artist, sports team, venue, location, genre...
+                  Try searching for: artist, sports team, venue, location, keyword...
                 </Text>
                 <TextInput
                   placeholder="Search and Add..."
@@ -215,10 +215,10 @@ export default function PreferencesScreen({ navigation }) {
             </TouchableOpacity>
   
             <View style={styles.stepperContainer}>
-              {[1, 2, 3, 4, 5].map((step) => (
+              {[1, 2, 3].map((step) => (
                 <View
                   key={step}
-                  style={[styles.dot, step === 3 && styles.activeDot]}
+                  style={[styles.dot, step === 1 && styles.activeDot]}
                 />
               ))}
             </View>
