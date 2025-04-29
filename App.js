@@ -3,6 +3,8 @@ import * as Font from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message'; 
+import { toastConfig } from './utils/toastConfig';
+import { SafeAreaView, StyleSheet } from 'react-native';
 
 import LoginScreen from './screens/Auth/LoginScreen';
 import SignupScreen from './screens/Auth/SignupScreen';
@@ -28,7 +30,7 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea}>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -40,8 +42,15 @@ export default function App() {
           <Stack.Screen name="HomeFeed" component={HomeFeedScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
-
-      <Toast />
-    </>
+  
+      <Toast config={toastConfig} />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+});

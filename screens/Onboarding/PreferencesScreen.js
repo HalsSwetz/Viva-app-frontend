@@ -7,7 +7,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Keyboard,
@@ -15,6 +14,7 @@ import {
   Image,
 } from 'react-native';
 import { getAuthToken } from '../../services/authStorage';
+import Toast from 'react-native-toast-message';
 
 const backendUrl = 'https://viva-api-server-8920686ec75a.herokuapp.com';
 
@@ -97,7 +97,12 @@ export default function PreferencesScreen({ navigation }) {
       (pref) => pref.value === item.name && pref.type === item.type
     );
     if (exists) {
-      Alert.alert('Already Added', `${item.name} is already in your preferences`);
+      Toast.show({
+        type: 'info',
+        text1: `"${item.name}" is already in your preferences`,
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
       return;
     }
   
@@ -110,15 +115,26 @@ export default function PreferencesScreen({ navigation }) {
     setPreferences([...preferences, newPref]);
     setSuggestions([]);
     setSearchQuery('');
-    Alert.alert('Added', `"${item.name}" has been added to your preferences`);
+  
+    Toast.show({
+      type: 'success',
+      text1: `"${item.name}" added`,
+      position: 'bottom',
+      visibilityTime: 2000,
+    });
   };
-
+  
   const handleSubmitPreferences = async () => {
     if (!authToken) {
-      Alert.alert('Error', 'You need to be logged in to save preferences');
+      Toast.show({
+        type: 'error',
+        text1: 'You need to be logged in to save preferences',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
       return;
     }
-
+  
     try {
       const res = await fetch(`${backendUrl}/api/preferences/update-preferences`, {
         method: 'PATCH',
@@ -128,14 +144,28 @@ export default function PreferencesScreen({ navigation }) {
         },
         body: JSON.stringify({ preferences }),
       });
-
+  
       if (!res.ok) throw new Error('Failed to update preferences');
-
-      Alert.alert('Success', 'Preferences saved!');
-      navigation.navigate('UserDetail');
+  
+      Toast.show({
+        type: 'success',
+        text1: 'Saved Successfully',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
+  
+      setTimeout(() => {
+        navigation.navigate('UserDetail');
+      }, 2000);
+  
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Could not save preferences');
+      Toast.show({
+        type: 'error',
+        text1: 'Could not save preferences',
+        position: 'bottom',
+        visibilityTime: 2000,
+      });
     }
   };
 
