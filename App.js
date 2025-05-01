@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message'; 
 import { toastConfig } from './utils/toastConfig';
 import { SafeAreaView, StyleSheet } from 'react-native';
+import { StripeProvider } from '@stripe/stripe-react-native';
 
 import LoginScreen from './screens/Auth/LoginScreen';
 import SignupScreen from './screens/Auth/SignupScreen';
@@ -31,18 +32,23 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="AppEducation" component={AppEducationScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="UserDetail" component={UserDetailScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="PaymentInfo" component={PaymentInfoScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="HomeFeed" component={HomeFeedScreen} options={{ headerShown: false }} />
-        </Stack.Navigator>
-      </NavigationContainer>
-  
+      <StripeProvider
+        publishableKey="pk_test_51RGRFpFFS1DQslf2dpYdJvzrmKArhNgzEjqn4Cv1jyqfCU2QLp69vTyWwF4VT0G2huQ28OiiwgLA5hD0T4QEIimd00V1ZQ15cH" 
+        merchantIdentifier="merchant.com.yourapp.identifier" // optional for Apple Pay later
+      >
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Login">
+            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="AppEducation" component={AppEducationScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="UserDetail" component={UserDetailScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="PaymentInfo" component={PaymentInfoScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Preferences" component={PreferencesScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="HomeFeed" component={HomeFeedScreen} options={{ headerShown: false }} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </StripeProvider>
+
       <Toast config={toastConfig} />
     </SafeAreaView>
   );
