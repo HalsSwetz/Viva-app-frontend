@@ -6,7 +6,7 @@ export const toastConfig = {
     <BaseToast
       {...props}
       style={{
-        borderLeftColor: '#2ecc71', // Soft green
+        borderLeftColor: '#2ecc71', 
         backgroundColor: '#1a1a1a',
         borderRadius: 8,
         borderLeftWidth: 6,
@@ -28,7 +28,7 @@ export const toastConfig = {
     <ErrorToast
       {...props}
       style={{
-        borderLeftColor: '#e74c3c', // Soft red
+        borderLeftColor: '#e74c3c', 
         backgroundColor: '#1a1a1a',
         borderRadius: 8,
         borderLeftWidth: 6,

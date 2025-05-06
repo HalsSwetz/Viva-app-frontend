@@ -27,22 +27,25 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      const response = await api.post('/api/auth/login', { email, password });
-
-      if (response.status === 200) {
-        const { token } = response.data;
-
-        if (token) {
-          await storeAuthToken(token);
-          navigation.navigate('HomeFeed');
-        } else {
-          setError('No token returned. Please try again.');
+        const response = await api.post('/api/auth/login', { email, password });
+      
+        if (response.status === 200) {
+          const { token } = response.data;
+      
+          if (token) {
+            await storeAuthToken(token);
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'MainApp' }],
+            });
+          } else {
+            setError('No token returned. Please try again.');
+          }
         }
+      } catch (err) {
+        console.error('Login failed:', err);
+        setError('Invalid credentials or server error');
       }
-    } catch (err) {
-      console.error('Login failed:', err);
-      setError('Invalid credentials or server error');
-    }
   };
 
   return (

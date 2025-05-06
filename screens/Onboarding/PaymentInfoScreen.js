@@ -14,7 +14,6 @@ import { CardField, useStripe } from '@stripe/stripe-react-native';
 import api from '../../services/api';
 import { getAuthToken } from '../../services/authStorage';
 
-
 export default function PaymentInfoScreen({ navigation }) {
   const [clientSecret, setClientSecret] = useState(null);
   const [cardComplete, setCardComplete] = useState(false);
@@ -22,13 +21,19 @@ export default function PaymentInfoScreen({ navigation }) {
   const { confirmSetupIntent } = useStripe();
 
   useEffect(() => {
+    let isMounted = true;
+  
     const fetchSetupIntent = async () => {
       try {
         const token = await getAuthToken();
         const response = await api.get('/api/stripe/setup-intent', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setClientSecret(response.data.clientSecret);
+  
+        if (isMounted) {
+          setClientSecret(response.data.clientSecret);
+          console.log('[Frontend] SetupIntent clientSecret received:', response.data.clientSecret);
+        }
       } catch (error) {
         console.error('Failed to fetch SetupIntent:', error);
         Toast.show({
@@ -38,8 +43,12 @@ export default function PaymentInfoScreen({ navigation }) {
         });
       }
     };
-
+  
     fetchSetupIntent();
+  
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSave = async () => {
@@ -52,33 +61,64 @@ export default function PaymentInfoScreen({ navigation }) {
     }
 
     setLoading(true);
-    try {
-      const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
-        paymentMethodType: 'Card',
-      });
 
-      if (error) {
-        console.error('Stripe error:', error);
+    try {
+      // Log the current clientSecret to ensure it's the correct one
+      console.log('[Frontend] Delaying confirmation of SetupIntent:', clientSecret);
+
+      // Validate if clientSecret contains '_secret_'
+      if (!clientSecret.includes('_secret_')) {
         Toast.show({
           type: 'error',
-          text1: 'Failed to save card',
-          text2: error.message,
+          text1: 'Invalid clientSecret',
+          text2: 'The clientSecret does not include the expected _secret_ part.',
         });
-      } else if (setupIntent) {
-        Toast.show({
-          type: 'success',
-          text1: 'Card Info Added',
-        });
-        setTimeout(() => navigation.navigate('Preferences'), 2000);
+        setLoading(false);
+        return;
       }
+
+      // Wait 500ms before calling confirmSetupIntent
+      setTimeout(async () => {
+        try {
+          console.log('[Frontend] Confirming SetupIntent with clientSecret:', clientSecret);
+
+          const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
+            paymentMethodType: 'Card',
+          });
+
+          if (error) {
+            console.error('Stripe error:', error);
+            Toast.show({
+              type: 'error',
+              text1: 'Failed to save card',
+              text2: error.message,
+            });
+          } else if (setupIntent) {
+            Toast.show({
+              type: 'success',
+              text1: 'Card Info Added',
+            });
+            setTimeout(() => navigation.navigate('Preferences'), 2000);
+          }
+
+        } catch (err) {
+          console.error('Unexpected error during delayed confirm:', err);
+          Toast.show({
+            type: 'error',
+            text1: 'Unexpected error',
+          });
+        } finally {
+          setLoading(false);
+        }
+      }, 500); // Delay 500ms
+
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('Unexpected outer error:', err);
       Toast.show({
         type: 'error',
         text1: 'Unexpected error',
       });
-    } finally {
-      setLoading(false);
+      setLoading(false); // just in case
     }
   };
 
