@@ -7,7 +7,7 @@ import { toastConfig } from './utils/toastConfig';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import AppNavigator from './navigation/AppNavigator';
-
+import { AuthProvider } from './context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,11 +27,13 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StripeProvider
-        publishableKey="pk_test_51RGRFpFFS1DQslf2dpYdJvzrmKArhNgzEjqn4Cv1jyqfCU2QLp69vTyWwF4VT0G2huQ28OiiwgLA5hD0T4QEIimd00V1ZQ15cH" 
+        publishableKey="pk_test_51RGRFpFFS1DQslf2dpYdJvzrmKArhNgzEjqn4Cv1jyqfCU2QLp69vTyWwF4VT0G2huQ28OiiwgLA5hD0T4QEIimd00V1ZQ15cH"
       >
-        <NavigationContainer>
-          <AppNavigator />
-        </NavigationContainer>
+        <AuthProvider>
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </AuthProvider>
       </StripeProvider>
       <Toast config={toastConfig} />
     </SafeAreaView>

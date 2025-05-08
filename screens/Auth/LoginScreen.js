@@ -13,9 +13,10 @@ import {
   Keyboard
 } from 'react-native';
 import api from '../../services/api';
-import { storeAuthToken } from '../../services/authStorage';
+import { useAuth } from '../../context/AuthContext'; // ✅ useAuth hook from context
 
 export default function LoginScreen({ navigation }) {
+  const { signIn } = useAuth(); // ✅ get signIn method from context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,25 +28,21 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-        const response = await api.post('/api/auth/login', { email, password });
-      
-        if (response.status === 200) {
-          const { token } = response.data;
-      
-          if (token) {
-            await storeAuthToken(token);
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'MainApp' }],
-            });
-          } else {
-            setError('No token returned. Please try again.');
-          }
+      const response = await api.post('/api/auth/login', { email, password });
+
+      if (response.status === 200) {
+        const { token } = response.data;
+
+        if (token) {
+          await signIn(token); // ✅ this now stores token & updates navigation via context
+        } else {
+          setError('No token returned. Please try again.');
         }
-      } catch (err) {
-        console.error('Login failed:', err);
-        setError('Invalid credentials or server error');
       }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Invalid credentials or server error');
+    }
   };
 
   return (
@@ -101,67 +98,3 @@ export default function LoginScreen({ navigation }) {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  logoContainer: {
-    marginBottom: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 70,
-    padding: 5,
-  },
-  logo: {
-    width: 140,
-    height: 140,
-    borderRadius: 30,
-  },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  appName: {
-    fontSize: 50,
-    letterSpacing: 8,
-    color: '#fff',
-    fontFamily: 'Playfair',
-    fontWeight: 'bold',
-  },
-  tagline: {
-    fontSize: 16,
-    color: '#ccc',
-    marginTop: 1,
-    marginBottom: 5,
-    fontFamily: 'Alike',
-  },
-  input: {
-    width: '100%',
-    height: 48,
-    backgroundColor: '#1a1a1a',
-    color: '#fff',
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  buttonContainer: {
-    width: '100%',
-    marginBottom: 16,
-  },
-  link: {
-    color: '#00bcd4',
-    marginTop: 16,
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 16,
-  },
-});

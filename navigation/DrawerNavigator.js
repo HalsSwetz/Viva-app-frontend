@@ -2,10 +2,12 @@ import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 
-import ProfileScreen from '../screens/Profile/ProfileScreen';
-import PreferencesScreen from '../screens/Onboarding/PreferencesScreen';
+import ManagePreferences from '../screens/Profile/ManagePreferences';
+import UserDetailScreen from '../screens/Onboarding/UserDetailScreen';
+import PaymentInfoScreen from '../screens/Onboarding/PaymentInfoScreen';
 import MyEventsScreen from '../screens/Profile/MyEventsScreen';
 import SavedEventsScreen from '../screens/Profile/SavedEventsScreen';
+import LogoutScreen from '../screens/Profile/Logout';
 import MainTabNavigator from './MainTabNavigator';
 
 const Drawer = createDrawerNavigator();
@@ -31,18 +33,19 @@ export default function DrawerNavigator() {
       />
       <Drawer.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={UserDetailScreen}
         options={{
-          drawerIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
+        drawerIcon: ({ color, size }) => <Ionicons name="person" color={color} size={size} />,
         }}
-      />
+    />
       <Drawer.Screen
-        name="Preferences"
-        component={PreferencesScreen}
+        name="ManagePreferences"
+        component={ManagePreferences}
         options={{
-          drawerIcon: ({ color, size }) => <Ionicons name="options" color={color} size={size} />,
+        title: 'Manage Preferences',
+        drawerIcon: ({ color, size }) => <Ionicons name="build" color={color} size={size} />,
         }}
-      />
+    />
       <Drawer.Screen
         name="MyEvents"
         component={MyEventsScreen}
@@ -59,6 +62,22 @@ export default function DrawerNavigator() {
           drawerIcon: ({ color, size }) => <Ionicons name="heart" color={color} size={size} />,
         }}
       />
+      <Drawer.Screen
+        name="PaymentInfo"
+        component={PaymentInfoScreen}
+        options={{
+        title: 'Payment Info',
+        drawerIcon: ({ color, size }) => <Ionicons name="card" color={color} size={size} />,
+        }}
+    />
+    <Drawer.Screen
+        name="Logout"
+        component={LogoutScreen}
+        options={{
+        title: 'Log Out',
+        drawerIcon: ({ color, size }) => <Ionicons name="log-out" color={color} size={size} />,
+    }}
+    />
     </Drawer.Navigator>
   );
 }

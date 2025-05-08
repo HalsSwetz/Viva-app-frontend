@@ -63,10 +63,8 @@ export default function PaymentInfoScreen({ navigation }) {
     setLoading(true);
 
     try {
-      // Log the current clientSecret to ensure it's the correct one
       console.log('[Frontend] Delaying confirmation of SetupIntent:', clientSecret);
 
-      // Validate if clientSecret contains '_secret_'
       if (!clientSecret.includes('_secret_')) {
         Toast.show({
           type: 'error',
@@ -77,15 +75,14 @@ export default function PaymentInfoScreen({ navigation }) {
         return;
       }
 
-      // Wait 500ms before calling confirmSetupIntent
       setTimeout(async () => {
         try {
           console.log('[Frontend] Confirming SetupIntent with clientSecret:', clientSecret);
-
+      
           const { setupIntent, error } = await confirmSetupIntent(clientSecret, {
             paymentMethodType: 'Card',
           });
-
+      
           if (error) {
             console.error('Stripe error:', error);
             Toast.show({
@@ -98,9 +95,29 @@ export default function PaymentInfoScreen({ navigation }) {
               type: 'success',
               text1: 'Card Info Added',
             });
-            setTimeout(() => navigation.navigate('Preferences'), 2000);
-          }
 
+            setTimeout(() => {
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'MainApp',
+                    state: {
+                      routes: [
+                        {
+                          name: 'Main',
+                          state: {
+                            routes: [{ name: 'HomeFeed' }],
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              });
+            }, 500);
+          }
+      
         } catch (err) {
           console.error('Unexpected error during delayed confirm:', err);
           Toast.show({
@@ -110,7 +127,7 @@ export default function PaymentInfoScreen({ navigation }) {
         } finally {
           setLoading(false);
         }
-      }, 500); // Delay 500ms
+      }, 500);
 
     } catch (err) {
       console.error('Unexpected outer error:', err);
@@ -118,7 +135,7 @@ export default function PaymentInfoScreen({ navigation }) {
         type: 'error',
         text1: 'Unexpected error',
       });
-      setLoading(false); // just in case
+      setLoading(false);
     }
   };
 
@@ -166,9 +183,31 @@ export default function PaymentInfoScreen({ navigation }) {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Preferences')} style={styles.skipContainer}>
-        <Text style={styles.skipText}>Skip for now</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.skipContainer}
+  onPress={() =>
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: 'MainApp',
+          state: {
+            routes: [
+              {
+                name: 'Main',
+                state: {
+                  routes: [{ name: 'HomeFeed' }],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+  }
+>
+  <Text style={styles.skipText}>Skip for now</Text>
+</TouchableOpacity>
 
       <View style={styles.stepperContainer}>
         {[1, 2, 3].map((step) => (
