@@ -8,210 +8,197 @@ import {
   ActivityIndicator,
   TextInput,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { getAuthToken } from '../../services/authStorage';
 import Toast from 'react-native-toast-message';
-import { debounce } from 'lodash'; // Import lodash's debounce function
+import { debounce } from 'lodash';
 
 const backendUrl = 'https://viva-api-server-8920686ec75a.herokuapp.com';
 
 export default function HomeFeedScreen({ navigation }) {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [hasPreferences, setHasPreferences] = useState(false);
   const [savedEventIds, setSavedEventIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredEvents, setFilteredEvents] = useState([]);
 
-  // Fetch the initial feed of events
   useEffect(() => {
     fetchInitialFeed();
   }, []);
 
   useEffect(() => {
-    // Handle search filtering on change of the search query
-    if (searchQuery.trim() === '') {
-      setFilteredEvents(events); // If no search query, show all events
-    } else {
-      // Filter events based on the search query (case-insensitive)
-      const filtered = events.filter(event =>
-        event.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredEvents(filtered);
-    }
+    const filtered = searchQuery.trim()
+      ? events.filter((event) =>
+          event.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : events;
+    setFilteredEvents(filtered);
   }, [searchQuery, events]);
 
   const fetchInitialFeed = async () => {
-    let token;
-  
     try {
-      token = await getAuthToken();
-      console.log('User Token:', token);
+      setLoading(true);
+      const token = await getAuthToken();
+      await fetchPreferences(token);
+      await fetchEvents(token, 1, true);
     } catch (err) {
-      console.error('Failed to get auth token:', err);
-      Toast.show({ type: 'error', text1: 'Authentication failed' });
-      setLoading(false);
-      return;
-    }
-  
-    try {
-      const prefRes = await fetch(`${backendUrl}/api/preferences/preferences`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (!prefRes.ok) throw new Error(`Preferences fetch failed: ${prefRes.status}`);
-  
-      const prefs = await prefRes.json();
-    //   console.log('Fetched preferences:', prefs);
-  
-      if (!Array.isArray(prefs)) {
-        throw new Error('Preferences response is not an array');
-      }
-  
-      setHasPreferences(prefs.length > 0);
-    } catch (err) {
-      console.error('Error loading preferences:', err);
-      Toast.show({ type: 'error', text1: 'Failed to load preferences' });
-      setLoading(false);
-      return; // stop further fetching
-    }
-  
-    try {
-      await fetchEvents(token, 1);
-    } catch (err) {
-      console.error('Error loading events:', err);
+      console.error('Initial feed load failed:', err);
       Toast.show({ type: 'error', text1: 'Failed to load feed' });
     } finally {
       setLoading(false);
     }
   };
-  const fetchEvents = async (token, pageNum) => {
+
+  const fetchPreferences = async (token) => {
+    const res = await fetch(`${backendUrl}/api/preferences/preferences`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const prefs = await res.json();
+    setHasPreferences(Array.isArray(prefs) && prefs.length > 0);
+  };
+
+  const fetchEvents = async (token, pageNum, reset = false) => {
+    const res = await fetch(`${backendUrl}/api/events/feed?page=${pageNum}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      setHasMore(false);
+      return;
+    }
+
+    const newEvents = data.filter((event) => !events.find((e) => e.id === event.id));
+    const updated = reset ? newEvents : [...events, ...newEvents];
+    const sorted = updated.sort((a, b) => new Date(a.date) - new Date(b.date));
+    setEvents(sorted);
+    setPage(pageNum);
+  };
+
+  const loadMoreEvents = async () => {
+    if (!hasMore || isFetchingMore || loading) return;
+    setIsFetchingMore(true);
     try {
-      console.log(`[Frontend] Fetching events: Page ${pageNum}`);
-  
-      const res = await fetch(`${backendUrl}/api/events/feed?page=${pageNum}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`[Frontend] Event fetch failed: ${res.status} - ${errorText}`);
-        throw new Error('Failed to fetch events');
-      }
-  
-      const data = await res.json();
-    //   console.log(`[Frontend] Events received (count: ${data.length}):`, data);
-  
-      if (data.length === 0) {
-        setHasMore(false);
-      } else {
-        setEvents(prev => [...prev, ...data]);
-        setPage(pageNum);
-      }
+      const token = await getAuthToken();
+      await fetchEvents(token, page + 1);
     } catch (err) {
-      console.error('[Frontend] Pagination fetch error:', err);
       Toast.show({ type: 'error', text1: 'Failed to load more events' });
+    } finally {
+      setIsFetchingMore(false);
     }
   };
-  const loadMoreEvents = () => {
-    if (!hasMore || loading) return;
-    getAuthToken().then(token => fetchEvents(token, page + 1));
-  };
 
-  const renderEventCard = ({ item }) => {
-    const isSaved = savedEventIds.includes(item.id);
-
-    console.log(`Event: ${item.name}, Date: ${item.date}, Price: ${item.price || 'N/A'}, Location: ${item.venue || 'N/A'}`);
-
-    return (
-      <View style={styles.card}>
-        {item.image && (
-          <Image
-            source={{ uri: item.image }}
-            style={{ height: 160, borderRadius: 8, marginBottom: 10 }}
-            resizeMode="cover"
-          />
-        )}
-        <Text style={styles.eventTitle}>{item.name}</Text>
-        <Text style={styles.eventMeta}>{item.date} @ {item.venue}</Text>
-        <TouchableOpacity onPress={() => toggleSaveEvent(item.id)} style={{ marginTop: 8 }}>
-          <Text style={{ color: isSaved ? '#ff4081' : '#888' }}>
-            {isSaved ? '💖 Saved' : '🤍 Save'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const token = await getAuthToken();
+      setHasMore(true);
+      await fetchEvents(token, 1, true);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Refresh failed' });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const toggleSaveEvent = async (eventId) => {
     try {
       const token = await getAuthToken();
       const isSaved = savedEventIds.includes(eventId);
-  
-      const res = await fetch(`${backendUrl}/api/events/${eventId}/${isSaved ? 'unsave' : 'save'}`, {
+      const url = `${backendUrl}/api/events/${eventId}/${isSaved ? 'unsave' : 'save'}`;
+
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-  
-      if (!res.ok) throw new Error('Save failed');
-  
+
+      if (!res.ok) throw new Error('Save toggle failed');
+
       setSavedEventIds((prev) =>
-        isSaved ? prev.filter(id => id !== eventId) : [...prev, eventId]
+        isSaved ? prev.filter((id) => id !== eventId) : [...prev, eventId]
       );
     } catch (err) {
-      console.error('Save toggle failed:', err);
       Toast.show({ type: 'error', text1: 'Error saving event' });
     }
   };
 
-  // Debounced search handler to avoid too many requests while typing
   const handleSearch = useCallback(
-    debounce((query) => {
-      setSearchQuery(query);
-    }, 500), // 500ms delay after typing stops
+    debounce((query) => setSearchQuery(query), 400),
     []
   );
 
+  const renderEventCard = ({ item }) => {
+    const isSaved = savedEventIds.includes(item.id);
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate('EventDetails', { event: item })}
+        style={styles.card}
+      >
+        {item.image && <Image source={{ uri: item.image }} style={styles.image} />}
+        <View style={styles.cardContent}>
+          <Text style={styles.eventTitle} numberOfLines={1}>{item.name}</Text>
+          <Text style={styles.eventMeta}>
+            {item.date} • {item.venue || 'Unknown venue'}
+          </Text>
+          <View style={styles.tags}>
+            <Text style={styles.tag}>🎟 {item.priceRange || 'Tbd'}</Text>
+            <Text style={styles.tag}>📍 {item.city || 'Unknown'}</Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleSaveEvent(item.id)} style={styles.saveBtn}>
+            <Text style={{ color: isSaved ? '#ff4081' : '#999' }}>
+              {isSaved ? '💖 Saved' : '🤍 Save'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      {/* Optional banner */}
       {!hasPreferences && (
         <TouchableOpacity
           style={styles.banner}
           onPress={() => navigation.navigate('ManagePreferences')}
         >
-          <Text style={styles.bannerText}>Add Favorites to Customize Your Feed!</Text>
+          <Text style={styles.bannerText}>🎯 Add Favorites to Customize Your Feed!</Text>
         </TouchableOpacity>
       )}
 
-      {/* Search bar */}
       <TextInput
         placeholder="Search your feed..."
         placeholderTextColor="#ccc"
         style={styles.searchInput}
-        value={searchQuery}
-        onChangeText={handleSearch} // Use debounced search
+        onChangeText={handleSearch}
       />
 
-      {/* Feed */}
       {loading ? (
-        <ActivityIndicator size="large" color="#007aff" />
+        <ActivityIndicator size="large" color="#007aff" style={{ marginTop: 50 }} />
+      ) : filteredEvents.length === 0 ? (
+        <Text style={styles.emptyText}>
+          No events found. Try adjusting your preferences or search.
+        </Text>
       ) : (
         <FlatList
-          data={filteredEvents} // Use filtered events here
+          data={filteredEvents}
           renderItem={renderEventCard}
           keyExtractor={(item) => item.id.toString()}
           onEndReached={loadMoreEvents}
           onEndReachedThreshold={0.5}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListFooterComponent={
+            isFetchingMore ? <ActivityIndicator color="#555" style={{ margin: 10 }} /> : null
+          }
           contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
@@ -245,9 +232,16 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#111',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: 180,
+  },
+  cardContent: {
+    padding: 12,
   },
   eventTitle: {
     color: '#fff',
@@ -258,5 +252,28 @@ const styles = StyleSheet.create({
     color: '#ccc',
     fontSize: 14,
     marginTop: 4,
+  },
+  tags: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  tag: {
+    color: '#bbb',
+    fontSize: 12,
+    backgroundColor: '#222',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  saveBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  emptyText: {
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 40,
+    fontSize: 14,
   },
 });

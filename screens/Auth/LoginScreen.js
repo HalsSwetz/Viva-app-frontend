@@ -3,45 +3,41 @@ import {
   View,
   Text,
   TextInput,
+  TouchableOpacity,
   Button,
   StyleSheet,
   Image,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
 } from 'react-native';
 import api from '../../services/api';
-import { useAuth } from '../../context/AuthContext'; // ✅ useAuth hook from context
+import { useAuth } from '../../context/AuthContext'; // <-- import the hook
 
 export default function LoginScreen({ navigation }) {
-  const { signIn } = useAuth(); // ✅ get signIn method from context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please enter email and password');
-      return;
-    }
+  const { login } = useAuth(); // <-- get login method from context
 
+  const handleLogin = async () => {
     try {
       const response = await api.post('/api/auth/login', { email, password });
 
       if (response.status === 200) {
         const { token } = response.data;
-
         if (token) {
-          await signIn(token); // ✅ this now stores token & updates navigation via context
+          await login(token);  // <-- update context state and storage
+          // No need to navigate manually; navigation reacts to authToken state change
         } else {
-          setError('No token returned. Please try again.');
+          setError('Login failed. Please try again.');
         }
       }
     } catch (err) {
-      console.error('Login failed:', err);
-      setError('Invalid credentials or server error');
+      console.error('Login error:', err.response?.data || err.message);
+      setError('Login failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -87,14 +83,78 @@ export default function LoginScreen({ navigation }) {
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <TouchableOpacity style={styles.buttonContainer}>
-            <Button title="Log In" onPress={handleLogin} color="#007aff" />
+            <Button title="Log In" onPress={handleLogin} color="#00bcd4" />
           </TouchableOpacity>
 
           <Text style={styles.link} onPress={() => navigation.navigate('Signup')}>
-            Don't have an account? Sign up
+            Don’t have an account? Sign up
           </Text>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  logoContainer: {
+    marginBottom: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 70,
+    padding: 5,
+  },
+  logo: {
+    width: 140,
+    height: 140,
+    borderRadius: 30,
+  },
+  textContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  appName: {
+    fontSize: 50,
+    letterSpacing: 8,
+    color: '#fff',
+    fontFamily: 'Playfair',
+    fontWeight: 'bold',
+  },
+  tagline: {
+    fontSize: 16,
+    color: '#ccc',
+    marginTop: 1,
+    marginBottom: 5,
+    fontFamily: 'Alike',
+  },
+  input: {
+    width: '100%',
+    height: 48,
+    backgroundColor: '#1a1a1a',
+    color: '#fff',
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  buttonContainer: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  link: {
+    color: '#00bcd4',
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 16,
+  },
+});

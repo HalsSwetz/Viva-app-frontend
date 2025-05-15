@@ -6,12 +6,12 @@ import AppEducationScreen from '../screens/Onboarding/AppEducationScreen';
 import UserDetailScreen from '../screens/Onboarding/UserDetailScreen';
 import PaymentInfoScreen from '../screens/Onboarding/PaymentInfoScreen';
 import PreferencesScreen from '../screens/Onboarding/PreferencesScreen';
-import { AuthContext } from '../context/AuthContext'; // 👈 import
+import { AuthContext } from '../context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { authToken } = useContext(AuthContext); // 👈 use context
+  const { authToken } = useContext(AuthContext);
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

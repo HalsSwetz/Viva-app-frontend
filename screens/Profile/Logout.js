@@ -4,10 +4,10 @@ import { AuthContext } from '../../context/AuthContext'; // ✅ Import context
 
 export default function LogoutScreen() {
   const [showModal, setShowModal] = useState(true);
-  const { signOut } = useContext(AuthContext); // ✅ Use signOut not logout
+  const { logout } = useContext(AuthContext); // ✅ Use signOut not logout
 
   const handleLogout = async () => {
-    await signOut(); // ✅ This clears token and reroutes to AuthNavigator
+    await logout(); // ✅ This clears token and reroutes to AuthNavigator
   };
 
   const cancelLogout = () => {
