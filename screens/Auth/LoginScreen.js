@@ -13,14 +13,14 @@ import {
   Keyboard,
 } from 'react-native';
 import api from '../../services/api';
-import { useAuth } from '../../context/AuthContext'; // <-- import the hook
+import { useAuth } from '../../context/AuthContext'; 
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const { login } = useAuth(); // <-- get login method from context
+  const { login } = useAuth(); 
 
   const handleLogin = async () => {
     try {
