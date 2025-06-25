@@ -101,7 +101,8 @@ Stripe API integration (ticket purchasing)
 
 # Demo
 
-ADD DEMO VID
+[![Watch the VIVA app demo](./assets/VIVAscreenshot.png)](./assets/viva-demo.mp4)
+*Click the image above to watch a 1-minute walkthrough of the VIVA app*
 
 <!-- ⚡ Getting Started (Local Dev)
 
