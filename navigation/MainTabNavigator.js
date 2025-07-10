@@ -2,7 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
-import HomeFeedScreen from '../screens/Feed/HomeFeedScreen';
+
+import FeedStackNavigator from './FeedStackNavigator'; // Import the new stack
 import NearbyFeedScreen from '../screens/Feed/NearbyFeedScreen';
 import SearchScreen from '../screens/Feed/SearchScreen';
 
@@ -34,12 +35,24 @@ export default function MainTabNavigator({ navigation }) {
         tabBarStyle: { backgroundColor: '#000' },
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: '#888',
-        headerShown: true,
+        headerShown: true, 
       })}
     >
-      <Tab.Screen name="Home" component={HomeFeedScreen} options={({ navigation }) => renderHamburger(navigation)} />
-      <Tab.Screen name="Nearby" component={NearbyFeedScreen} options={({ navigation }) => renderHamburger(navigation)} />
-      <Tab.Screen name="Search" component={SearchScreen} options={({ navigation }) => renderHamburger(navigation)} />
+      <Tab.Screen
+        name="Home"
+        component={FeedStackNavigator} 
+        options={({ navigation }) => renderHamburger(navigation)}
+      />
+      <Tab.Screen
+        name="Nearby"
+        component={NearbyFeedScreen}
+        options={({ navigation }) => renderHamburger(navigation)}
+      />
+      <Tab.Screen
+        name="Search"
+        component={SearchScreen}
+        options={({ navigation }) => renderHamburger(navigation)}
+      />
     </Tab.Navigator>
   );
 }
