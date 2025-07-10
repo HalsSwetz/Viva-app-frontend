@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Image, TouchableOpacity } fr
 import { KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import api from '../../services/api'; 
 import { storeAuthToken } from '../../services/authStorage';
-
+import { useAuth } from '../../context/AuthContext';
 
 
 
@@ -14,6 +14,8 @@ export default function SignupScreen({ navigation }) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [zipcode, setZipcode] = useState('');
+
+  const { login } = useAuth();
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -33,16 +35,15 @@ export default function SignupScreen({ navigation }) {
         const { token } = response.data;
   
         if (token) {
-          await storeAuthToken(token); 
-          navigation.navigate('AppEducation'); 
+          await login(token); 
         } else {
-          navigation.navigate('Login');
+          setError('Signup failed. No token received.');
         }
       }
     } catch (err) {
-        console.error('Signup failed:', err.response?.data || err.message);
-        setError('Signup failed: ' + (err.response?.data?.message || err.message));
-      }
+      console.error('Signup failed:', err.response?.data || err.message);
+      setError('Signup failed: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
